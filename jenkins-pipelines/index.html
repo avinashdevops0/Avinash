@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End CI/CD · Node.js · Jenkins · SonarQube · Docker · Trivy</title>
+    <!-- Font & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #0b2b4a;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px -12px rgba(0,20,40,0.25);
+            overflow: hidden;
+            border: 1px solid #e9edf4;
+        }
+
+        /* header gradient */
+        .pipeline-header {
+            background: linear-gradient(135deg, #0d2b4a 0%, #153e6f 100%);
+            color: white;
+            padding: 2.5rem 3rem;
+        }
+
+        .pipeline-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .pipeline-header h1 i {
+            color: #5fc3e4;
+            margin-right: 12px;
+        }
+
+        .pipeline-header .sub {
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0.9;
+            max-width: 800px;
+            border-left: 4px solid #3b9cd9;
+            padding-left: 1.2rem;
+            margin-top: 0.5rem;
+        }
+
+        .badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin: 1.8rem 0 0.5rem;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(4px);
+            padding: 0.4rem 1.2rem;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge i {
+            color: #8dc9ff;
+        }
+
+        /* content */
+        .content {
+            padding: 2.5rem 3rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0b2b4a;
+            margin: 2rem 0 1.5rem;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 3px solid #e6edf5;
+            padding-bottom: 0.6rem;
+        }
+
+        .section-title i {
+            color: #1e6bb8;
+            font-size: 2rem;
+        }
+
+        .pipeline-overview {
+            background: #f0f6fe;
+            border-radius: 28px;
+            padding: 1.8rem 2.2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #cbddea;
+        }
+
+        .overview-text {
+            font-size: 1.1rem;
+            color: #104079;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .pill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem 1rem;
+        }
+
+        .pill {
+            background: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #0b2b4a;
+            box-shadow: 0 2px 6px rgba(0,35,70,0.06);
+            border: 1px solid #b9d2ef;
+        }
+
+        .pill i {
+            color: #1d7abd;
+            margin-right: 6px;
+        }
+
+        /* code block */
+        .code-block {
+            background: #0c1d2f;
+            color: #e2eef9;
+            border-radius: 18px;
+            padding: 1.4rem 1.8rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 1.5rem 0 2rem;
+            border: 1px solid #2a405b;
+            box-shadow: 0 10px 18px -8px rgba(0,0,0,0.3);
+        }
+
+        .code-block .keyword { color: #7ec9fc; }
+        .code-block .string { color: #c9e6a8; }
+        
+        /* stage grid */
+        .stage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0 1rem;
+        }
+
+        .stage-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 1.5rem 1.4rem;
+            border: 1px solid #dee9f2;
+            box-shadow: 0 6px 14px rgba(0,20,40,0.02);
+            transition: all 0.2s ease;
+        }
+
+        .stage-card:hover {
+            border-color: #8bb9e0;
+            box-shadow: 0 12px 22px -8px rgba(20,80,140,0.15);
+        }
+
+        .stage-icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .stage-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #103a60;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #e1ecfb;
+            padding-bottom: 0.4rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .stage-desc {
+            color: #1f3e5c;
+            font-size: 0.98rem;
+            margin: 0.6rem 0 0.8rem;
+        }
+
+        .stage-command {
+            background: #eef4fa;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #124077;
+            border: 1px solid #bdd2ec;
+            display: inline-block;
+            margin: 0.3rem 0;
+        }
+
+        .stage-note {
+            font-size: 0.9rem;
+            color: #4b637b;
+            margin-top: 0.5rem;
+            border-left: 3px solid #3d9cf3;
+            padding-left: 0.8rem;
+            background: #f6faff;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .why-box {
+            background: #ebf3fa;
+            border-radius: 20px;
+            padding: 1.4rem 2rem;
+            margin: 2rem 0;
+            border-left: 6px solid #0f6ab0;
+        }
+
+        .why-box strong {
+            color: #003b70;
+        }
+
+        .table-area {
+            margin: 2rem 0 2.5rem;
+            background: white;
+            border-radius: 24px;
+            border: 1px solid #d4e2f0;
+            overflow: hidden;
+        }
+
+        .table-area table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-area th {
+            background: #103457;
+            color: white;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .table-area td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #d9e5f0;
+            color: #1f3d5a;
+            font-weight: 500;
+        }
+
+        .table-area tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-area td i {
+            color: #1e7e34;
+            font-size: 1.2rem;
+        }
+
+        .footer-note {
+            margin-top: 2.5rem;
+            text-align: center;
+            color: #4b6c8b;
+            border-top: 2px dashed #b8cde0;
+            padding-top: 2rem;
+            font-size: 1rem;
+        }
+
+        .footer-note i {
+            color: #c00f0f;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="pipeline-header">
+        <h1>
+            <i class="fas fa-rocket"></i> End-to-End CI/CD Pipeline
+        </h1>
+        <div class="sub">Node.js · Jenkins · SonarQube · Docker · Trivy</div>
+        <div class="badge-container">
+            <span class="badge"><i class="fas fa-check-circle"></i> Dependency install</span>
+            <span class="badge"><i class="fas fa-vial"></i> Automated testing</span>
+            <span class="badge"><i class="fas fa-code-branch"></i> SonarQube analysis</span>
+            <span class="badge"><i class="fas fa-shield-alt"></i> Quality gate</span>
+            <span class="badge"><i class="fab fa-docker"></i> Docker build</span>
+            <span class="badge"><i class="fas fa-bug"></i> Trivy scan</span>
+            <span class="badge"><i class="fas fa-cloud-upload-alt"></i> DockerHub push</span>
+        </div>
+    </div>
+
+    <div class="content">
+        <!-- overview -->
+        <div class="pipeline-overview">
+            <div class="overview-text">
+                <i class="fas fa-cogs" style="margin-right: 10px;"></i>Production‑style Jenkins pipeline with code quality, security scanning, containerisation & automated workflows.
+            </div>
+            <div class="pill-list">
+                <span class="pill"><i class="fas fa-broom"></i> Clean workspace</span>
+                <span class="pill"><i class="fas fa-code"></i> Checkout (books branch)</span>
+                <span class="pill"><i class="fas fa-box"></i> npm install</span>
+                <span class="pill"><i class="fas fa-flask"></i> npm test</span>
+                <span class="pill"><i class="fas fa-search"></i> SonarScanner</span>
+                <span class="pill"><i class="fas fa-door-closed"></i> Quality gate</span>
+                <span class="pill"><i class="fas fa-image"></i> Image build</span>
+                <span class="pill"><i class="fas fa-scan"></i> Trivy scan</span>
+                <span class="pill"><i class="fas fa-tag"></i> Tag & push</span>
+            </div>
+        </div>
+
+        <!-- full pipeline code (readable) -->
+        <div class="section-title"><i class="fas fa-code"></i> Pipeline as code</div>
+        <div class="code-block">
+pipeline {
+    agent any
+    tools { nodejs 'mynode' }
+    environment {
+        MYSQL_ROOT_PASSWORD = credentials('MYSQL_ROOT_PASSWORD')
+        MYSQL_USER          = credentials('MYSQL_USER')
+        MYSQL_USER_PASSWORD = credentials('MYSQL_USER_PASSWORD')
+    }
+    stages {
+        stage('Clean Workspace') { steps { cleanWs() } }
+        stage('Checkout Code') { steps { git branch: 'books', url: 'https://github.com/avinashdevops0/Books_Managent.git' } }
+        stage('Install Dependencies') { steps { sh 'npm install' } }
+        stage('Test') { steps { sh 'npm test' } }
+        stage('SonarQube analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'mysonar'
+                    withSonarQubeEnv('mysonar') {
+                        sh """${scannerHome}/bin/sonar-scanner \
+                          -Dsonar.projectKey=Books_Manager \
+                          -Dsonar.projectName=Books_Manager \
+                          -Dsonar.sources=. \
+                          -Dsonar.java.binaries=. """
+                    }
+                }
+            }
+        }
+        stage('Quality Gate') { steps { waitForQualityGate abortPipeline: false, credentialsId: 'sonar' } }
+        stage('Image Build') { steps { sh 'docker image build -t be:${BUILD_NUMBER} .' } }
+        stage('Image Scan') { steps { sh 'trivy image be:${BUILD_NUMBER} > be-${BUILD_NUMBER}.txt' } }
+        stage('Image Tag') { steps { sh 'docker tag be:${BUILD_NUMBER} avinashg0/be:${BUILD_NUMBER}' } }
+        stage('Docker Login and Push') {
+            steps {
+                withDockerRegistry(credentialsId: 'docker', url: 'https://index.docker.io/v1/') {
+                    sh 'docker push avinashg0/be:${BUILD_NUMBER}'
+                }
+            }
+        }
+    }
+}
+        </div>
+
+        <!-- stage by stage grid -->
+        <div class="section-title"><i class="fas fa-layer-group"></i> Stage‑by‑stage breakdown</div>
+        <div class="stage-grid">
+            <!-- 1 -->
+            <div class="stage-card">
+                <div class="stage-icon">🧹</div>
+                <div class="stage-name">Clean workspace</div>
+                <div class="stage-command">cleanWs()</div>
+                <div class="stage-desc">Removes leftover files, prevents build contamination.</div>
+                <div class="stage-note"><i class="fas fa-check-circle" style="color:#1b7c43;"></i> Essential for reproducible builds</div>
+            </div>
+            <!-- 2 -->
+            <div class="stage-card">
+                <div class="stage-icon">📥</div>
+                <div class="stage-name">Checkout Code</div>
+                <div class="stage-command">git branch: 'books'</div>
+                <div class="stage-desc">Pulls source from specific branch.</div>
+                <div class="stage-note"><i class="fas fa-lightbulb"></i> Always define branch explicitly.</div>
+            </div>
+            <!-- 3 -->
+            <div class="stage-card">
+                <div class="stage-icon">📦</div>
+                <div class="stage-name">Install Dependencies</div>
+                <div class="stage-command">npm install</div>
+                <div class="stage-desc">Installs Node modules; prepare runtime.</div>
+                <div class="stage-note"><i class="fas fa-forward"></i> Use <code>npm ci</code> for deterministic installs.</div>
+            </div>
+            <!-- 4 -->
+            <div class="stage-card">
+                <div class="stage-icon">🧪</div>
+                <div class="stage-name">Test</div>
+                <div class="stage-command">npm test</div>
+                <div class="stage-desc">Executes automated tests, prevents bad code.</div>
+                <div class="stage-note">⛓️ Never build images for untested code.</div>
+            </div>
+            <!-- 5 -->
+            <div class="stage-card">
+                <div class="stage-icon">🔎</div>
+                <div class="stage-name">SonarQube analysis</div>
+                <div class="stage-command">sonar-scanner</div>
+                <div class="stage-desc">Static code analysis: bugs, vulnerabilities, smells.</div>
+                <div class="stage-note"><i class="fas fa-exclamation-triangle"></i> Without it: debt & security risks</div>
+            </div>
+            <!-- 6 -->
+            <div class="stage-card">
+                <div class="stage-icon">🚦</div>
+                <div class="stage-name">Quality Gate</div>
+                <div class="stage-command">waitForQualityGate</div>
+                <div class="stage-desc">Enforces quality rules; stops if fails.</div>
+                <div class="stage-note">🚩 Fail fast → fix early → deploy confidently</div>
+            </div>
+            <!-- 7 -->
+            <div class="stage-card">
+                <div class="stage-icon">🐳</div>
+                <div class="stage-name">Docker Image Build</div>
+                <div class="stage-command">docker build -t be:${BUILD_NUMBER}</div>
+                <div class="stage-desc">Packages app into immutable artifact.</div>
+                <div class="stage-note">✔ Consistent env, faster deploys</div>
+            </div>
+            <!-- 8 -->
+            <div class="stage-card">
+                <div class="stage-icon">🛡️</div>
+                <div class="stage-name">Trivy Image Scan</div>
+                <div class="stage-command">trivy image be:...</div>
+                <div class="stage-desc">Detects OS & library vulnerabilities.</div>
+                <div class="stage-note">🔒 Most vulns come from base images & packages.</div>
+            </div>
+            <!-- 9 -->
+            <div class="stage-card">
+                <div class="stage-icon">🏷️</div>
+                <div class="stage-name">Image Tag</div>
+                <div class="stage-command">docker tag ... avinashg0/be:${BUILD_NUMBER}</div>
+                <div class="stage-desc">Versioned images enable rollback.</div>
+                <div class="stage-note">📌 Use semantic version + commit hash.</div>
+            </div>
+            <!-- 10 -->
+            <div class="stage-card">
+                <div class="stage-icon">☁️</div>
+                <div class="stage-name">DockerHub Push</div>
+                <div class="stage-command">docker push</div>
+                <div class="stage-desc">Publishes artifact to registry.</div>
+                <div class="stage-note">🚀 ready for deployment</div>
+            </div>
+        </div>
+
+        <!-- why it matters / production pillars -->
+        <div class="why-box">
+            <strong><i class="fas fa-industry"></i> Why this pipeline is production‑grade</strong> — integrates all modern DevOps pillars:<br>
+            <span style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+                <span><i class="fas fa-check-circle" style="color:#1e7e34;"></i> CI Automation</span>
+                <span><i class="fas fa-check-circle" style="color:#1e7e34;"></i> Code Quality</span>
+                <span><i class="fas fa-check-circle" style="color:#1e7e34;"></i> Testing</span>
+                <span><i class="fas fa-check-circle" style="color:#1e7e34;"></i> Containerization</span>
+                <span><i class="fas fa-check-circle" style="color:#1e7e34;"></i> Security Scanning</span>
+                <span><i class="fas fa-check-circle" style="color:#1e7e34;"></i> Artifact Versioning</span>
+            </span>
+        </div>
+
+        <!-- quick comparison table -->
+        <div class="section-title"><i class="fas fa-table"></i> DevOps pillars covered</div>
+        <div class="table-area">
+            <table>
+                <thead><tr><th>Area</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>CI Automation</td><td><i class="fas fa-check-circle" style="color:#1e7e34;"></i> ✅ covered</td></tr>
+                    <tr><td>Code Quality</td><td><i class="fas fa-check-circle" style="color:#1e7e34;"></i> ✅ covered</td></tr>
+                    <tr><td>Testing</td><td><i class="fas fa-check-circle" style="color:#1e7e34;"></i> ✅ covered</td></tr>
+                    <tr><td>Containerization</td><td><i class="fas fa-check-circle" style="color:#1e7e34;"></i> ✅ covered</td></tr>
+                    <tr><td>Security Scanning</td><td><i class="fas fa-check-circle" style="color:#1e7e34;"></i> ✅ covered</td></tr>
+                    <tr><td>Artifact Versioning</td><td><i class="fas fa-check-circle" style="color:#1e7e34;"></i> ✅ covered</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- best practice notes -->
+        <div style="background:#f9fdff; border-radius: 20px; padding: 1.5rem; border:1px solid #cee2fc;">
+            <div style="display: flex; gap: 1.2rem; flex-wrap: wrap;">
+                <div style="flex:1;"><i class="fas fa-dragon" style="color:#184e81;"></i> <strong>Golden Rule CI/CD:</strong> Never build Docker images for untested code.</div>
+                <div style="flex:1;"><i class="fas fa-shield-virus"></i> <strong>Security Reality:</strong> Most vulnerabilities come from base images & third‑party packages.</div>
+                <div style="flex:1;"><i class="fas fa-tag"></i> <strong>Pro Tagging:</strong> semantic version + build number / commit hash.</div>
+            </div>
+        </div>
+
+        <!-- footer -->
+        <div class="footer-note">
+            <i class="fas fa-heart" style="color:#bb2f3a;"></i> end‑to‑end pipeline · Jenkins · SonarQube · Docker · Trivy · Node.js <i class="fas fa-heart" style="color:#bb2f3a;"></i>
+        </div>
+    </div> <!-- content -->
+</div> <!-- container -->
+</body>
+</html>
