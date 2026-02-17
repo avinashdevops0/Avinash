@@ -1,1 +1,185 @@
-Avinash
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD Pipeline Blog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f7f9fc;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #0f172a;
+        }
+        pre {
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        code {
+            color: #38bdf8;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        .highlight {
+            background: #e0f2fe;
+            padding: 15px;
+            border-left: 5px solid #38bdf8;
+            margin: 20px 0;
+        }
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🚀 End-to-End CI/CD Pipeline for a Node.js Application</h1>
+
+    <p>
+        Modern DevOps pipelines are no longer just about building applications. 
+        They now include <strong>code quality checks, security scanning, containerization, 
+        and automated deployment workflows</strong>.
+    </p>
+
+    <div class="highlight">
+        <strong>Pipeline Includes:</strong>
+        <ul>
+            <li>Dependency Installation</li>
+            <li>Automated Testing</li>
+            <li>SonarQube Code Analysis</li>
+            <li>Quality Gate Enforcement</li>
+            <li>Docker Image Build</li>
+            <li>Trivy Image Scanning</li>
+            <li>DockerHub Push</li>
+        </ul>
+    </div>
+
+    <h2>🧩 Jenkins Pipeline</h2>
+
+    <pre><code>
+pipeline {
+    agent any
+    tools {
+        nodejs 'mynode'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps { cleanWs() }
+        }
+        stage('Checkout Code') {
+            steps {
+                git branch: 'books',
+                    url: 'https://github.com/avinashdevops0/Books_Managent.git'
+            }
+        }
+        stage('Install Dependencies') {
+            steps { sh 'npm install' }
+        }
+        stage('Test') {
+            steps { sh 'npm test' }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'mysonar'
+                    withSonarQubeEnv('mysonar') {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+            }
+        }
+        stage('Quality Gate') {
+            steps { waitForQualityGate abortPipeline: false }
+        }
+        stage('Docker Build') {
+            steps { sh 'docker build -t be:${BUILD_NUMBER} .' }
+        }
+        stage('Image Scan') {
+            steps { sh 'trivy image be:${BUILD_NUMBER}' }
+        }
+        stage('Push Image') {
+            steps { sh 'docker push avinashg0/be:${BUILD_NUMBER}' }
+        }
+    }
+}
+    </code></pre>
+
+    <h2>🏗 Stage Breakdown</h2>
+
+    <h3>🧹 Clean Workspace</h3>
+    <p>Removes old artifacts to ensure reproducible builds.</p>
+
+    <h3>📥 Checkout Code</h3>
+    <p>Fetches source code from the Git repository.</p>
+
+    <h3>📦 Install Dependencies</h3>
+    <p>Installs Node.js modules required for the application.</p>
+
+    <h3>🧪 Testing</h3>
+    <p>Executes automated tests to prevent broken code from moving forward.</p>
+
+    <h3>🔎 SonarQube Analysis</h3>
+    <p>Performs static code analysis to detect bugs and vulnerabilities.</p>
+
+    <h3>🚦 Quality Gate</h3>
+    <p>Stops the pipeline if quality standards are not met.</p>
+
+    <h3>🐳 Docker Image Build</h3>
+    <p>Creates an immutable container artifact.</p>
+
+    <h3>🛡 Trivy Security Scan</h3>
+    <p>Identifies vulnerabilities in container images.</p>
+
+    <h3>☁ DockerHub Push</h3>
+    <p>Publishes the image for deployment.</p>
+
+    <h2>🔥 Why This Pipeline is Production-Ready</h2>
+
+    <ul>
+        <li>Automated CI workflow</li>
+        <li>Code quality enforcement</li>
+        <li>Security scanning</li>
+        <li>Immutable artifacts</li>
+        <li>Versioned deployments</li>
+    </ul>
+
+    <h2>🚀 Possible Enhancements</h2>
+
+    <ul>
+        <li>Parallel builds</li>
+        <li>Kubernetes deployment</li>
+        <li>Slack notifications</li>
+        <li>Multi-environment promotion</li>
+    </ul>
+
+    <h2>🧠 Key Takeaways</h2>
+
+    <div class="highlight">
+        <ul>
+            <li>CI/CD is more than builds</li>
+            <li>Quality gates prevent production failures</li>
+            <li>Security scanning is mandatory</li>
+            <li>Containers simplify deployments</li>
+            <li>Automation reduces risk</li>
+        </ul>
+    </div>
+
+</div>
+
+</body>
+</html>
